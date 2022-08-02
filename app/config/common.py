@@ -50,7 +50,7 @@ class CommonSettings(BaseSettings):
     netease_login_passwd: str = ''
     netease_cookie: str = ''
     netease_cookie_limit: str = ''
-    netease_cookie_lease: datetime
+    netease_cookie_lease: datetime = None
 
     class Config:
         env_file = ".env"
