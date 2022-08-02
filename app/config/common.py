@@ -2,6 +2,7 @@ import collections
 
 from pydantic import BaseSettings
 from typing import List
+from datetime import datetime
 
 from app.music.music import Music
 
@@ -49,7 +50,7 @@ class CommonSettings(BaseSettings):
     netease_login_passwd: str = ''
     netease_cookie: str = ''
     netease_cookie_limit: str = ''
-    netease_cookie_lease: str = ''
+    netease_cookie_lease: datetime
 
     class Config:
         env_file = ".env"

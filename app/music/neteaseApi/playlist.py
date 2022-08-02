@@ -34,4 +34,6 @@ async def fetch_music_list_by_id(id: int, get_all: bool = False) -> list[Music]:
             if not songs[i].source or not songs[i].is_free:
                 songs.pop(i)
 
+    if get_all:
+        return songs
     return songs[:10] if len(songs) > 10 else songs
