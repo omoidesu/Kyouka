@@ -1,6 +1,16 @@
 from typing import Union
 
 class Music:
+    music_id: Union[int, str]
+    name: str
+    author: str
+    source: str
+    duration: int
+    endtime: int = -1
+    album: str
+    cover_url: str
+    website: str
+
     def __init__(self, music_id: Union[int, str], name: str, author: str, source: str, duration: int, album: str, cover_url: str, website: str):
         self.music_id = music_id
         self.name = name

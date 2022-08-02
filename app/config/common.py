@@ -39,6 +39,18 @@ class CommonSettings(BaseSettings):
     candidates_map: dict = {}
     candidates_lock: bool = False
 
+    enable_netease_api: bool = False
+    # type
+    #   0: anonymous, 1: phone, 2: phone+captcha, 3: email
+    netease_api: str = 'http://cloud-music.pl-fe.cn/'
+    netease_login_type: int = 0
+    netease_login_phone: int = -1
+    netease_login_email: str = ''
+    netease_login_passwd: str = ''
+    netease_cookie: str = ''
+    netease_cookie_limit: str = ''
+    netease_cookie_lease: str = ''
+
     class Config:
         env_file = ".env"
 

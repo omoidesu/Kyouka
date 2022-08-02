@@ -137,3 +137,26 @@ async def keep_bot_market_heart_beat():
 
     except Exception as e:
         logger.error(f"failed to keep bot alive at bot market, error msg: {e}, traceback: {traceback.format_exc()}")
+
+async def refresh_netease_api_cookies():
+    async with aiohttp.ClientSession() as session:
+        async with session.get(settings.netease_api + 'login/refresh', headers={'cookie': settings.netease_cookie}) as resp:
+            resp_json = await resp.json()
+            if resp.status != 200:
+                raise Exception( resp_json.get('msg'))
+            
+    status = resp_json.get('status', 500)
+    if status != 200:
+        raise Exception(str(status) + ' ' + resp_json.get("error", "fetch music source failed, unknown reason, please restart this bot"))
+    else:
+        cookie = resp_json.get('cookie')
+        cookie_list = cookie.split(';')
+        for cookie_value in cookie_list:
+            if 'NMTID=' in cookie_value:
+                settings.netease_cookie = settings.netease_cookie + '; ' + cookie_value
+                index = cookie_list.index(cookie_value)
+                lease = cookie_list[index + 2]
+                cookie_lease_datetime = datetime.datetime.strptime(lease, '%a, %d %b %Y %H:%M:%S GMT')
+                break
+
+        settings.netease_cookie_lease = cookie_lease_datetime

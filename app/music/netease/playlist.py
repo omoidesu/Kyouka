@@ -25,7 +25,7 @@ async def fetch_music_ids_by_playlist_id(playlist_id: str) -> list[str]:
                     music_ids.append(this_music[0])
     return music_ids
 
-async def fetch_music_list_by_id(playlist_id: str) -> list[Music]:
+async def fetch_music_list_by_id(playlist_id: str, *args) -> list[Music]:
     music_ids = await fetch_music_ids_by_playlist_id(playlist_id=playlist_id)
     result = await song_ids_to_instances(*music_ids)
 

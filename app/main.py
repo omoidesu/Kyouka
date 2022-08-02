@@ -7,10 +7,6 @@ from khl import Message, Bot, PublicMessage
 from khl.card import CardMessage
 from app.bot import bot
 from app.config.common import settings
-from app.music.netease.album import fetch_album_by_id
-from app.music.netease.search import fetch_music_source_by_name, search_music_by_keyword
-from app.music.netease.playlist import fetch_music_list_by_id
-from app.music.netease.radio import fetch_radio_by_id
 from app.music.bilibili.search import bvid_to_music_by_bproxy
 from app.music.osu.search import osearch_music_by_keyword
 from app.music.qqmusic.search import qsearch_music_by_keyword
@@ -21,12 +17,24 @@ from app.utils.log_utils import loguru_decorator_factory as log
 from app.utils.permission_utils import warn_decorator as warn
 from app.utils.permission_utils import ban_decorator as ban
 from app.utils.message_utils import update_cardmessage_by_bot
-from app.task.interval_tasks import update_played_time_and_change_music, clear_expired_candidates_cache, keep_bproxy_alive, update_kanban_info, update_playing_game_status, keep_bot_market_heart_beat
+from app.task.interval_tasks import update_played_time_and_change_music, clear_expired_candidates_cache, keep_bproxy_alive, update_kanban_info, update_playing_game_status, keep_bot_market_heart_beat, refresh_netease_api_cookies
 
 import app.CardStorage as CS
 
+if settings.enable_netease_api:
+    from app.music.neteaseApi.search import search_music_by_keyword
+    from app.music.neteaseApi.playlist import fetch_music_list_by_id
+    from app.music.neteaseApi.album import fetch_album_by_id
+    from app.music.neteaseApi.radio import fetch_radio_by_id
+    from app.music.neteaseApi.login import login
+else:
+    from app.music.netease.album import fetch_album_by_id
+    from app.music.netease.search import search_music_by_keyword
+    from app.music.netease.playlist import fetch_music_list_by_id
+    from app.music.netease.radio import fetch_radio_by_id
 
-__version__ = "0.7.2"
+
+__version__ = "0.8.0-o"
 
 # logger
 if settings.file_logger:
@@ -107,10 +115,10 @@ async def play_music(msg: Message, *args):
     if not music_name:
         raise Exception("输入格式有误。\n正确格式为: /play {music_name} 或 /点歌 {music_name}")
     else:
-        music = await fetch_music_source_by_name(music_name)
+        music = await search_music_by_keyword(music_name)
         if music:
-            await msg.channel.send(CardMessage(CS.pickCard(music)))
-            settings.playqueue.append(music)
+            await msg.channel.send(CardMessage(CS.pickCard(music[0])))
+            settings.playqueue.append(music[0])
         else:
             await msg.channel.send(f"没有搜索到歌曲: {music_name} 哦，试试搜索其他歌曲吧")
 
@@ -119,10 +127,11 @@ async def play_music(msg: Message, *args):
 @log(command="playlist")
 @ban
 @warn
-async def import_music_by_playlist(msg: Message, playlist_url : str=""):
+async def import_music_by_playlist(msg: Message, playlist_url : str="", *args):
     if not playlist_url:
         raise Exception("输入格式有误。\n正确格式为: /playlist {playlist_url} 或 /歌单 {playlist_url}")
     else:
+        get_all = False if not args else True if args[0] == 'all' else False
         netease_playlist_pattern = re.compile(r"(?:playlist|^)(?:/|)(?:\?id=|)(\d+)")
         matched_obj = netease_playlist_pattern.search(playlist_url)
         if matched_obj:
@@ -130,7 +139,7 @@ async def import_music_by_playlist(msg: Message, playlist_url : str=""):
         else:
             raise Exception("输入格式有误。\n正确格式为: /playlist {playlist_url} 或 /歌单 {playlist_url}")
         await msg.channel.send("正在逐条导入歌单音乐，请稍候")
-        result = await fetch_music_list_by_id(playlist_id=playlist_id)
+        result = await fetch_music_list_by_id(playlist_id, get_all=get_all)
         if not result:
             raise Exception("歌单为空哦，请检查你的输入")
         else:
@@ -182,7 +191,7 @@ async def import_music_by_radio(msg: Message, radio_url: str = ''):
         else:
             raise Exception('输入格式有误。\n正确格式为: /radio {radio_url} 或 /电台 {radio_url}')
         await msg.channel.send("正在逐条导入电台节目，请稍候")
-        result = await fetch_radio_by_id(radio_id=radio_id)
+        result = await fetch_radio_by_id(radio_id)
         if not result:
             raise Exception('电台为空哦，请检查你的输入')
         else:
@@ -609,6 +618,9 @@ async def logout(msg: Message):
 @bot.task.add_date()
 async def startup_tasks():
     await container_handler.clear_leaked_containers()
+    if settings.enable_netease_api:
+        from app.music.neteaseApi.login import login
+        await login()
 
 
 # repeated tasks
@@ -636,6 +648,15 @@ async def three_minutes_interval_tasks():
 @bot.task.add_interval(minutes=20)
 async def twenty_minutes_interval_tasks():
     await keep_bot_market_heart_beat()
+
+
+@bot.task.add_interval(days=1)
+async def one_days_interval_tasks():
+    if settings.enable_netease_api:
+        if settings.netease_login_type:
+            await refresh_netease_api_cookies()
+        else:
+            await login()
 
 
 # buttons reflection event, WIP
@@ -800,4 +821,15 @@ async def regular_cut_music(msg:Message):
         await bot.command.get("cut").handler(msg)
 
 #########################
+'''
+
+'''
+# test netease api
+
+@bot.command('test')
+async def test(msg: Message, *args):
+    from app.music.neteaseApi.search import search_music_by_keyword
+    candidates = await search_music_by_keyword(' '.join(args))
+    for music in candidates:
+        await msg.ctx.channel.send(str(music))
 '''
