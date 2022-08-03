@@ -52,6 +52,12 @@ class CommonSettings(BaseSettings):
     netease_cookie_limit: str = ''
     netease_cookie_lease: datetime = None
 
+    enable_migu_api: bool = False
+    migu_api: str = 'http://localhost:3000/'
+    # bitrate:
+    #   0: 128k, 1: 320k, 2:flac
+    migu_bitrate: int = 0
+
     class Config:
         env_file = ".env"
 

@@ -11,6 +11,8 @@ from app.music.bilibili.search import bvid_to_music_by_bproxy
 from app.music.osu.search import osearch_music_by_keyword
 from app.music.qqmusic.search import qsearch_music_by_keyword
 from app.music.migu.search import msearch_music_by_keyword
+from app.music.migu.album import m_fetch_album_by_id
+from app.music.migu.playlist import m_fetch_music_list_by_id
 from app.voice_utils.container_async_handler import container_handler
 from app.utils.channel_utils import get_joined_voice_channel_id
 from app.utils.log_utils import loguru_decorator_factory as log
@@ -34,7 +36,7 @@ else:
     from app.music.netease.radio import fetch_radio_by_id
 
 
-__version__ = "0.8.0-o"
+__version__ = "0.8.1-o"
 
 # logger
 if settings.file_logger:
@@ -139,7 +141,10 @@ async def import_music_by_playlist(msg: Message, playlist_url : str="", *args):
         else:
             raise Exception("输入格式有误。\n正确格式为: /playlist {playlist_url} 或 /歌单 {playlist_url}")
         await msg.channel.send("正在逐条导入歌单音乐，请稍候")
-        result = await fetch_music_list_by_id(playlist_id, get_all=get_all)
+        if 'migu' in playlist_url:
+            result = await m_fetch_music_list_by_id(bot, playlist_id, get_all=get_all)
+        else:
+            result = await fetch_music_list_by_id(playlist_id, get_all=get_all)
         if not result:
             raise Exception("歌单为空哦，请检查你的输入")
         else:
@@ -165,7 +170,10 @@ async def import_music_by_album(msg: Message, album_url: str=''):
         else:
             raise Exception('输入格式有误。\n正确格式为: /album {album_url} 或 /电台 {album_url}')
         await msg.channel.send("正在逐条导入专辑音乐，请稍候")
-        result = await fetch_album_by_id(album_id)
+        if 'migu' in album_url:
+            result = await m_fetch_album_by_id(album_id)
+        else:
+            result = await fetch_album_by_id(album_id)
         if not result:
             raise Exception('专辑为空哦，请检查你的输入')
         else:
@@ -303,7 +311,7 @@ async def search_netease(msg: Message, *args):
             await msg.reply(f"没有任何与关键词: {keyword} 匹配的信息, 试试搜索其他关键字吧")
 
 
-@bot.command(name='osearch', aliases=['osusearch', 'searchosu', '搜索osu', '搜osu'])
+@bot.command(name='osearch', aliases=['osu', 'osusearch', 'searchosu', '搜索osu', '搜osu'])
 @log(command="osearch")
 @ban
 @warn
@@ -330,7 +338,7 @@ async def search_osu(msg: Message, *args):
             await msg.reply(f"没有任何与关键词: {keyword} 匹配的信息, 试试搜索其他关键字吧")
 
 
-@bot.command(name='msearch', aliases=['migusearch', 'searchmigu', '搜索咪咕', '搜咪咕', '咪咕音乐'])
+@bot.command(name='msearch', aliases=['migu', 'migusearch', 'searchmigu', '搜索咪咕', '搜咪咕', '咪咕音乐'])
 @log(command="msearch")
 @ban
 @warn
@@ -357,7 +365,7 @@ async def search_migu(msg: Message, *args):
             await msg.reply(f"没有任何与关键词: {keyword} 匹配的信息, 试试搜索其他关键字吧") 
 
 
-@bot.command(name='qsearch', aliases=['qqsearch', 'searchqq', '搜索QQ', '搜QQ', 'QQ音乐'])
+@bot.command(name='qsearch', aliases=['qq', 'qqsearch', 'searchqq', '搜索QQ', '搜QQ', 'QQ音乐'])
 @log(command="qsearch")
 @ban
 @warn
@@ -672,7 +680,7 @@ async def msg_btn_click(b:Bot,event:Event):
         extra={'guild_id': event.body['guild_id'], 'channel_name': channel.name, 'author': {'id': user_id}})
     value = event.body['value']
 
-    now_time = str(datetime.datetime.now()).replace(':', '-')
+    now_time = datetime.datetime.now().timestamp() * 1000
     action, *args, end_time = (value.split(":"))
 
     play_list = list(settings.playqueue)
