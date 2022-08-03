@@ -141,7 +141,7 @@ def MusicListCard(music_list: list[Music]) -> Tuple[Card, Card]:
                     f"**({index + 2})    {one_music_des.name} - {one_music_des.author}**",
                     type=Types.Text.KMD
                 ),
-                accessory=Element.Button('删除', f"remove:{index+2}:{end_time}", theme=Types.Theme.DANGER)
+                accessory=Element.Button('删除', f"remove:{index+2}:{end_time_int}", theme=Types.Theme.DANGER)
             )
         )
         remaining_list_card.append(
