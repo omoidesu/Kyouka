@@ -47,13 +47,10 @@ async def fetch_song_by_cid(bot, cid: int, album_name) -> MiguMusic:
             if not data:
                 return None
 
-            if not data.get('album', ''):
-                data['album'] = {
-                    'name': album_name,
-                    'picUrl': data.get('picUrl', '')
-                }
-            else:
-                data['album']['picUrl'] = data.get('picUrl', '')
+            data['album'] = {
+                'name': album_name,
+                'picUrl': data.get('picUrl', '')
+            }
 
             song = MiguMusic(**data)
             song.source = data.get(bitrate[settings.migu_bitrate], data.get('128', ''))
