@@ -36,7 +36,7 @@ else:
     from app.music.netease.radio import fetch_radio_by_id
 
 
-__version__ = "0.8.1-o"
+__version__ = "0.8.2-o"
 
 # logger
 if settings.file_logger:
