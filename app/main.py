@@ -632,7 +632,7 @@ async def startup_tasks():
 
 
 # repeated tasks
-@bot.task.add_interval(seconds=5)
+@bot.task.add_interval(seconds=1)
 async def five_seconds_interval_tasks():
     await update_played_time_and_change_music()
 
