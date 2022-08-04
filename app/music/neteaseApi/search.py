@@ -35,7 +35,7 @@ async def search_music_by_keyword(music_name: str, limit: int = 10) -> list[Musi
                 mp3_urls.get(song.get('id')),
                 song.get('duration', 180000),
                 song.get('album', {}).get("name", "未知专辑"),
-                (await get_album_info(song.get('album', {}).get('id', ''))).cover_url,
+                (await get_album_info(song.get('album', {}).get('id', ''))).cover_url if song.get('album', {}).get('id', '') else '',
                 'netease'
             ) if mp3_urls.get(song.get('id')) else None for song in data]
 
