@@ -311,7 +311,7 @@ def topCard(music_list: list[Music]) -> Card:
         )
         if len(card._modules) >= 46:
             card.append(Module.Divider())
-            card.append(Module.Header(f'{len(music_list)-16} 首音乐被折叠'))
+            card.append(Module.Header(f'{len(music_list)-15} 首音乐被折叠'))
             break
 
     return card
