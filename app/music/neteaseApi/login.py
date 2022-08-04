@@ -66,6 +66,7 @@ def get_cookie(cookies: str) -> str:
     cookies_list = cookies.split(';')
     cookie_items = []
     cookie_item_list: list = []
+    cookie_lease_datetime = datetime.now()
     for c in cookies_list:
         if c:
             if c[0] != ' ':
