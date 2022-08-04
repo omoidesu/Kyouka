@@ -38,7 +38,7 @@ async def update_played_time_and_change_music():
                     return None
                 else:
                     duration = first_music.duration
-                    if settings.played + 5000 < duration:
+                    if settings.played + 5000 < duration or (settings.played + 5000 > duration and settings.played < duration):
                         settings.played += 5000
                         settings.lock = False
                         return None
