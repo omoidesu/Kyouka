@@ -18,7 +18,7 @@ from app.utils.channel_utils import get_joined_voice_channel_id
 from app.utils.log_utils import loguru_decorator_factory as log
 from app.utils.permission_utils import warn_decorator as warn
 from app.utils.permission_utils import ban_decorator as ban
-from app.utils.message_utils import update_cardmessage_by_bot
+from app.utils.message_utils import update_message_by_bot
 from app.task.interval_tasks import update_played_time_and_change_music, clear_expired_candidates_cache, keep_bproxy_alive, update_kanban_info, update_playing_game_status, keep_bot_market_heart_beat, refresh_netease_api_cookies
 
 import app.CardStorage as CS
@@ -140,9 +140,9 @@ async def import_music_by_playlist(msg: Message, playlist_url : str="", *args):
             playlist_id = matched_obj.groups()[0]
         else:
             raise Exception("输入格式有误。\n正确格式为: /playlist {playlist_url} 或 /歌单 {playlist_url}")
-        await msg.channel.send("正在逐条导入歌单音乐，请稍候")
+        msg_id = (await msg.channel.send("正在逐条导入歌单音乐，请稍候"))['msg_id']
         if 'migu' in playlist_url:
-            result = await m_fetch_music_list_by_id(bot, playlist_id, get_all=get_all)
+            result = await m_fetch_music_list_by_id(bot, playlist_id, msg_id, get_all=get_all)
         else:
             result = await fetch_music_list_by_id(playlist_id, get_all=get_all)
         if not result:
@@ -764,7 +764,7 @@ async def msg_btn_click(b:Bot,event:Event):
 async def update_cardmessage(message: Message, content: CardMessage):
     try:
         content_str = json.dumps(content)
-        await update_cardmessage_by_bot(bot, message.id, content_str)
+        await update_message_by_bot(bot, message.id, content_str)
     except:
         await message.delete()
         await message.ctx.channel.send(content)

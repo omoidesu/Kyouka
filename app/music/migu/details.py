@@ -2,7 +2,6 @@ import aiohttp
 
 from app.config.common import settings
 from app.music.migu.music import MiguMusic
-from app.utils.asset_utils import webp2jpeg
 
 bitrate = {0: '128', 1: '320', 2: 'flac'}
 
@@ -55,7 +54,5 @@ async def fetch_song_by_cid(bot, cid: int, album_name) -> MiguMusic:
             song = MiguMusic(**data)
             song.source = data.get(bitrate[settings.migu_bitrate], data.get('128', ''))
             song.duration = int(data.get('duration', 240) * 1e3)
-
-            song.cover_url = await webp2jpeg(bot, song.cover_url)
 
             return song
