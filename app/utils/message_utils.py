@@ -1,15 +1,6 @@
-from khl import Bot, Message
+from khl import Bot
 
-async def update_cardmessage_by_message(msg: Message, msg_id: str, content: str):
-    method = 'POST'
-    route = 'message/update'
-    json = {
-        'msg_id': msg_id,
-        'content': content
-    }
-    await msg.ctx.gate.request(method=method, route=route, json=json)
-
-async def update_cardmessage_by_bot(bot: Bot, msg_id: str, content: str):
+async def update_message_by_bot(bot: Bot, msg_id: str, content: str):
     method = 'POST'
     route = 'message/update'
     json = {
