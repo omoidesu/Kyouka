@@ -20,6 +20,8 @@ async def get_mp3_urls(*song_ids: int) -> dict:
         raise Exception(resp_json.get('message'))
     else:
         data = resp_json.get('data', [])
+        if not data:
+            raise Exception(resp_json.get('message'))
         return {
             song.get('id'): song.get('url') if song.get('url') and not song.get('freeTrialInfo') else None for song in data
         }

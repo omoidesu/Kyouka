@@ -10,7 +10,7 @@ NETEASE_PLAYLIST_API = "https://music.163.com/playlist/"
 NETEASE_PLAYLIST_SONG_ID_PATTERN = re.compile(r'<li><a href="/song\?id=(.*?)">(.*?)</a></li>')
 
 
-async def fetch_music_ids_by_playlist_id(playlist_id: str) -> list[str]:
+async def fetch_music_ids_by_playlist_id(playlist_id: str, **kwargs) -> list[str]:
     url = f"{NETEASE_PLAYLIST_API}?id={playlist_id}"
     music_ids = []
 
