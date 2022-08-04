@@ -246,7 +246,7 @@ def searchCard(music_dict: dict) -> Card:
                         )
                     )
                 card.append(Module.Context(
-                    Element.Image(music.cover_url),
+                    Element.Image(music.cover_url if music.cover_url else NO_COVER_URL),
                     Element.Text(f' {music.album}')
                 ))
                 card.append(Module.Divider())

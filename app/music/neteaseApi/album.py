@@ -22,10 +22,10 @@ async def get_album_info(id: int) -> Album:
 
     async with aiohttp.ClientSession() as session:
         async with session.get(url, params=params) as resp:
+            resp_json = await resp.json()
             if resp.status != 200:
                 raise Exception(str(resp.status) + resp_json.get('message'))
-            resp_json = await resp.json()
-
+            
     status = resp_json.get('code', 500)
     if status == 500:
         raise Exception(resp_json.get("error", "fetch music source failed, unknown reason."))
