@@ -7,16 +7,16 @@ from datetime import datetime
 from app.music.music import Music
 
 
-class CommonSettings(BaseSettings):
+class CommonSettings():
     debug: bool = False
 
-    admin_users: List[str] = []
+    admin_users: List[str] = ['565510950']
 
     file_logger: bool = True
 
-    token: str = ""
-    channel: str = ""
-    container_name: str = ""
+    token: str = "1/MTA2MDQ=/V6c2bKnm+gL53xq1umwD4g=="
+    channel: str = "4009148958166446"
+    container_name: str = "kyouka-runner"
     bot_name: str = "镜华 Kyouka"
 
     public: bool = False
@@ -40,7 +40,7 @@ class CommonSettings(BaseSettings):
     candidates_map: dict = {}
     candidates_lock: bool = False
 
-    enable_netease_api: bool = False
+    enable_netease_api: bool = True
     # type
     #   0: anonymous, 1: phone, 2: phone+captcha, 3: email
     netease_api: str = 'http://cloud-music.pl-fe.cn/'
