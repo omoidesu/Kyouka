@@ -65,4 +65,4 @@ async def get_radio_program_count(rid) -> int:
     if status == 500:
         raise Exception(resp_json.get("error", "fetch music source failed, unknown reason."))
     else:
-        return resp_json.get('programCount', 0)
+        return resp_json.get('data', {}).get('programCount', 0)
