@@ -196,6 +196,8 @@ async def import_music_by_radio(msg: Message, radio_url: str = '', *args):
             get_all = True if args[0] == 'all' else False
             if len(args) > 1:
                 reverse = True if args[1] == 're' else False
+            else:
+                reverse = False
         else:
             get_all = reverse = False
         netease_radio_pattern = re.compile(r'(?:radio|^)(?:/|)(?:\?id=|)(\d+)')
