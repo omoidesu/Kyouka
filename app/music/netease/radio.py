@@ -24,7 +24,7 @@ async def fetch_program_ids_by_radio_id(radio_id: str):
     return []
 
 
-async def fetch_radio_by_id(radio_id: str) -> list[Music]:
+async def fetch_radio_by_id(radio_id: str, *args, **kwargs) -> list[Music]:
     program_ids = await fetch_program_ids_by_radio_id(radio_id)
     result = [await fetch_program_details_by_id(prog_id) for prog_id in program_ids]
 

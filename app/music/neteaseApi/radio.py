@@ -4,13 +4,16 @@ from app.config.common import settings
 from app.music.music import Music
 from app.music.neteaseApi.details import get_mp3_urls
 
-async def fetch_radio_by_id(rid: int) -> list[Music]:
+async def fetch_radio_by_id(rid: int, get_all: bool, reverse: bool = False) -> list[Music]:
     ret = None
     url = settings.netease_api + 'dj/program'
     params = {
-        'rid': rid,
-        'limit': 5
+        'rid': rid
     }
+    if not get_all:
+        params['limit'] = 10
+    if reverse:
+        params['asc'] = 'true'
 
     async with aiohttp.ClientSession() as session:
         async with session.get(url, params=params) as resp:

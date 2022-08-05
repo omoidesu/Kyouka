@@ -119,8 +119,8 @@ async def play_music(msg: Message, *args):
     else:
         music = await search_music_by_keyword(music_name)
         if music:
-            await msg.channel.send(CardMessage(CS.pickCard(music[0])))
             settings.playqueue.append(music[0])
+            await msg.channel.send(CardMessage(CS.pickCard(music[0])))
         else:
             await msg.channel.send(f"没有搜索到歌曲: {music_name} 哦，试试搜索其他歌曲吧")
 
@@ -188,10 +188,16 @@ async def import_music_by_album(msg: Message, album_url: str=''):
 @log(command='radio')
 @ban
 @warn
-async def import_music_by_radio(msg: Message, radio_url: str = ''):
+async def import_music_by_radio(msg: Message, radio_url: str = '', *args):
     if not radio_url:
         raise Exception('输入格式有误。\n正确格式为: /radio {radio_url} 或 /电台 {radio_url}')
     else:
+        if args:
+            get_all = True if args[0] == 'all' else False
+            if len(args) > 1:
+                reverse = True if args[1] == 're' else False
+        else:
+            get_all = reverse = False
         netease_radio_pattern = re.compile(r'(?:radio|^)(?:/|)(?:\?id=|)(\d+)')
         matched_obj = netease_radio_pattern.search(radio_url)
         if matched_obj:
@@ -199,7 +205,7 @@ async def import_music_by_radio(msg: Message, radio_url: str = ''):
         else:
             raise Exception('输入格式有误。\n正确格式为: /radio {radio_url} 或 /电台 {radio_url}')
         await msg.channel.send("正在逐条导入电台节目，请稍候")
-        result = await fetch_radio_by_id(radio_id)
+        result = await fetch_radio_by_id(radio_id, get_all, reverse)
         if not result:
             raise Exception('电台为空哦，请检查你的输入')
         else:
