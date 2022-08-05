@@ -4,13 +4,17 @@ from app.config.common import settings
 from app.music.music import Music
 from app.music.neteaseApi.details import get_mp3_urls
 
-async def fetch_radio_by_id(rid: int) -> list[Music]:
+async def fetch_radio_by_id(rid: int, get_all: bool, reverse: bool = False) -> list[Music]:
     ret = None
     url = settings.netease_api + 'dj/program'
     params = {
         'rid': rid,
-        'limit': 5
+        'limit': 10
     }
+    if get_all:
+        params['limit'] = await get_radio_program_count(rid)
+    if reverse:
+        params['asc'] = 'true'
 
     async with aiohttp.ClientSession() as session:
         async with session.get(url, params=params) as resp:
@@ -43,3 +47,22 @@ async def fetch_radio_by_id(rid: int) -> list[Music]:
                 ret.pop(i)
 
     return ret
+
+
+async def get_radio_program_count(rid) -> int:
+    url = settings.netease_api + 'dj/detail'
+    params  = {
+        'rid': rid,
+    }
+
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url, params=params) as resp:
+            resp_json = await resp.json()
+            if resp.status != 200:
+                raise Exception(str(resp.status) + resp_json.get('message'))
+            
+    status = resp_json.get('code', 500)
+    if status == 500:
+        raise Exception(resp_json.get("error", "fetch music source failed, unknown reason."))
+    else:
+        return resp_json.get('programCount', 0)
