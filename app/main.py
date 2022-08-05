@@ -457,6 +457,7 @@ async def play_list(msg: Message):
     if not play_list:
         await msg.channel.send("当前的播放列表为空哦")
     else:
+        resp = ''
         for index, this_music in enumerate(play_list):
             resp += f"[{index + 1}] {this_music.name} - {this_music.author}"
             if index == 0:
