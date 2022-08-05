@@ -448,6 +448,24 @@ async def play_list(msg: Message):
             raise e
 
 
+
+@bot.command(name="playing")
+@log(command="playing")
+async def play_list(msg: Message):
+    '''send ls by text not cardmessage'''
+    play_list = list(settings.playqueue)
+    if not play_list:
+        await msg.channel.send("当前的播放列表为空哦")
+    else:
+        for index, this_music in enumerate(play_list):
+            resp += f"[{index + 1}] {this_music.name} - {this_music.author}"
+            if index == 0:
+                resp += " <-- 正在播放 -->\n"
+            else:
+                resp += "\n"
+        await msg.channel.send(resp)
+
+
 @bot.command(name="cut", aliases=["next", "切歌", "下一首", "切"])
 @log(command="cut")
 @ban
