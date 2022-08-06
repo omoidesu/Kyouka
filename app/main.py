@@ -494,8 +494,6 @@ async def cut_music(msg: Message):
             await msg.channel.send("正在切歌，请稍候")
             settings.playqueue.popleft()
             await container_handler.stop_container()
-            settings.lyric_msgid = ''
-            settings.playing_lyric = {}
             await msg.channel.send("后面没歌了哦")
             settings.played = 0
         else:
@@ -504,8 +502,6 @@ async def cut_music(msg: Message):
             next_music = settings.playqueue[0]
             next_music.endtime = int(datetime.datetime.now().timestamp() * 1000) + next_music.duration
             await msg.channel.send(f"正在为您播放 {next_music.name} - {next_music.author}")
-            settings.lyric_msgid = ''
-            settings.playing_lyric = {}
             await container_handler.create_container(next_music.source)
 
 

@@ -48,6 +48,8 @@ class ContainerHandler:
             "Env": env_list,
         }
         logger.debug(f"{config}")
+        settings.lyric_msgid = ''
+        settings.playing_lyric = {}
         settings.played = -1001
         await self.client.containers.run(config=config, name=self.current_container_name)
         await self.stop_container(container_name=self.previous_container_name)
@@ -58,6 +60,8 @@ class ContainerHandler:
                 container_name = self.current_container_name
             container = await self.client.containers.get(container_name)
             await container.stop()
+            settings.lyric_msgid = ''
+            settings.playing_lyric = {}
         except DockerError:
             logger.warning(f"{container_name} is not running")
     
