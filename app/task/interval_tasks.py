@@ -57,6 +57,7 @@ async def update_played_time_and_change_music():
 
                             settings.lyric_msgid = ''
                             settings.playing_lyric = {}
+                            settings.played = 9999
 
                             next_music.endtime = int(datetime.datetime.now().timestamp() * 1000) + next_music.duration
 
