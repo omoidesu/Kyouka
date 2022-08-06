@@ -13,9 +13,9 @@ from app.utils.message_utils import update_message_by_bot
 
 
 async def update_played_time_and_change_music():
-    logger.debug(f"PLAYED: {settings.played}")
-    logger.debug(f"Q: {[str(music) for music in settings.playqueue]}")
-    logger.debug(f"LOCK: {settings.lock}")
+    # logger.debug(f"PLAYED: {settings.played}")
+    # logger.debug(f"Q: {[str(music) for music in settings.playqueue]}")
+    # logger.debug(f"LOCK: {settings.lock}")
 
     if settings.lock:
         return None
@@ -46,12 +46,17 @@ async def update_played_time_and_change_music():
                         settings.playqueue.popleft()
                         if len(settings.playqueue) == 0:
                             await container_handler.stop_container()
+                            settings.lyric_msgid = ''
+                            settings.playing_lyric = {}
                             settings.played = 0
                             settings.lock = False
                             return None
                         else:
                             next_music = settings.playqueue[0]
                             await container_handler.create_container(next_music.source)
+
+                            settings.lyric_msgid = ''
+                            settings.playing_lyric = {}
 
                             next_music.endtime = int(datetime.datetime.now().timestamp() * 1000) + next_music.duration
 
