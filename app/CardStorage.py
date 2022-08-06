@@ -315,3 +315,20 @@ def topCard(music_list: list[Music]) -> Card:
             break
 
     return card
+
+
+def lyricCard(music: Music, lyric) -> Card:
+    card = Card(
+        Module.Header(':notes: ' + music.name),
+        Module.Divider(),
+        Module.Section(Element.Text(lyric)),
+        Module.Divider(),
+        Module.Context(
+            Element.Image(ASSETS[music.website]['icon']),
+            Element.Text(f' [{ASSETS[music.website]["text"]}]({ASSETS[music.website]["url"].format(music.music_id)}) | ', Types.Text.KMD),
+            Element.Image(music.cover_url),
+            Element.Text(f' {music.author} - {music.album}')
+        ), color=Color(hex=ASSETS[music.website]['color'])
+    )
+
+    return card
