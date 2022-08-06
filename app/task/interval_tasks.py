@@ -3,13 +3,15 @@ import traceback
 import aiohttp
 
 from loguru import logger
-from khl import Bot, Channel
+from khl import Bot, Channel, PublicMessage
+from khl.card import CardMessage
+from app.CardStorage import lyricCard
 from app.config.common import settings
 from app.utils.channel_utils import update_channel_name_by_bot
 from app.utils.playing_utils import set_playing_game_status_by_bot, BUSY_STATUS_GAME_ID, FREE_STATUS_GAME_ID
 from app.voice_utils.container_async_handler import container_handler
 from app.music.bilibili.search import BPROXY_API
-from app.utils.message_utils import update_message_by_bot
+from app.utils.message_utils import update_cardmessage
 
 
 async def change_music():
@@ -41,6 +43,8 @@ async def change_music():
                     settings.played = -1001
                     if len(settings.playqueue) == 0:
                         await container_handler.stop_container()
+                        settings.lyric_msgid = ''
+                        settings.playing_lyric = {}
                         settings.played = 0
                         settings.lock = False
                         return None
@@ -160,20 +164,27 @@ async def refresh_netease_api_cookies():
         settings.netease_cookie_lease = cookie_lease_datetime
 
 async def send_lyric(bot):
-    playtime = settings.played
+    if settings.playqueue:
+        playtime = settings.played
 
-    if settings.playing_lyric:
-        channel: Channel = settings.playing_lyric.get('channel', None)
-        lyrics = settings.playing_lyric.get('lyric', '')
-        if not channel or not lyrics:
-            raise Exception('歌词错误')
-        
-        lyric = lyrics.get(playtime + 1, '')
-        if not lyric:
-            return None
+        if settings.playing_lyric:
+            channel: Channel = settings.playing_lyric.get('channel', None)
+            lyrics = settings.playing_lyric.get('lyric', '')
+            if not channel or not lyrics:
+                raise Exception('歌词错误')
+            
+            lyric = lyrics.get(playtime + 1, '')
+            if not lyric:
+                return None
 
-        if not settings.lyric_msgid:
-            message = await channel.send(lyric)
-            settings.lyric_msgid = message['msg_id']
-        else:
-            await update_message_by_bot(bot, settings.lyric_msgid, lyric)
+            card = CardMessage(lyricCard(settings.playqueue[0], lyric))
+
+            if not settings.lyric_msgid:
+                message = await channel.send(card)
+                settings.lyric_msgid = message['msg_id']
+            else:
+                await update_cardmessage(bot, PublicMessage(
+                    msg_id=settings.lyric_msgid,
+                    _gate_=bot.client.gate,
+                    target_id=settings.lyric_channel,
+                    extra={'guild_id': '', 'channel_name': '', 'author': {'id': bot.me}}), card)

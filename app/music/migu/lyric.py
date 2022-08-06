@@ -27,10 +27,12 @@ async def get_lyric(music: Music) -> dict:
         for lyric_item in lyric:
             matchObj = time_pattern.search(lyric_item)
             if matchObj:
-                time = str_to_sec(matchObj.groups()[0])
-                lyric_str = lyric_item.split(']')[1]
-                lyric_dict[time] = lyric_str
-    
+                match = matchObj.groups()[0]
+                if ':' in match and '.' in match:  # [ti: ] [ar: ] etc.
+                    time = str_to_sec(match)
+                    lyric_str = lyric_item.split(']')[1]
+                    lyric_dict[time] = lyric_str
+
     return lyric_dict
 
 

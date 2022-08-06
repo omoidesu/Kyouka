@@ -15,7 +15,7 @@ from app.utils.channel_utils import get_joined_voice_channel_id
 from app.utils.log_utils import loguru_decorator_factory as log
 from app.utils.permission_utils import warn_decorator as warn
 from app.utils.permission_utils import ban_decorator as ban
-from app.utils.message_utils import update_message_by_bot
+from app.utils.message_utils import update_cardmessage
 from app.task.interval_tasks import change_music, clear_expired_candidates_cache, keep_bproxy_alive, update_kanban_info, update_playing_game_status, keep_bot_market_heart_beat, refresh_netease_api_cookies, send_lyric, update_played_time
 
 import app.CardStorage as CS
@@ -494,6 +494,9 @@ async def cut_music(msg: Message):
             await msg.channel.send("正在切歌，请稍候")
             settings.playqueue.popleft()
             await container_handler.stop_container()
+            settings.lyric_msgid = ''
+            settings.playing_lyric = {}
+            
             await msg.channel.send("后面没歌了哦")
             settings.played = 0
         else:
@@ -544,6 +547,8 @@ async def clear_playlist(msg: Message):
             await msg.channel.send("正在清空播放列表，请稍候")
             settings.playqueue.clear()
             await container_handler.stop_container()
+            settings.lyric_msgid = ''
+            settings.playing_lyric = {}
             await msg.channel.send("播放列表已清空")
             settings.played = 0
     else:
@@ -581,17 +586,23 @@ async def make_music_at_top_of_play_list(msg: Message, music_number: str=""):
 @log(command="lyric")
 async def lyric(msg: Message):
     playing = settings.playqueue[0]
+    logger.debug(str(settings.playing_lyric))
     if playing.website == 'migu':
-        lyrics = await m_get_lyric(playing.music_id)
+        if settings.enable_migu_api:
+            lyrics = await m_get_lyric(playing.music_id)
+        else:
+            return await msg.reply('未启用该功能')
     elif playing.website == 'netease':
         if settings.enable_netease_api:
             lyrics = await n_get_lyric(playing.music_id)
         else:
-            await msg.reply('未启用该功能')
+            return await msg.reply('未启用该功能')
     else:
-        await msg.reply('未启用该功能')
+        return await msg.reply('未启用该功能')
 
     settings.playing_lyric = {'channel': msg.ctx.channel, 'lyric': lyrics}
+    settings.lyric_channel = msg.ctx.channel.id
+    logger.debug(str(settings.playing_lyric))
 
 
 @bot.command(name="pause", aliases=["暂停"])
@@ -756,11 +767,11 @@ async def msg_btn_click(b:Bot,event:Event):
             except:
                 pass
         elif music_number > play_list_length or str(now_time) > end_time:
-            await update_cardmessage(message, CardMessage(*CS.MusicListCard(play_list)))
+            await update_cardmessage(bot, message, CardMessage(*CS.MusicListCard(play_list)))
         else:
             del settings.playqueue[music_number - 1]
             new_play_list = list(settings.playqueue)
-            await update_cardmessage(message, CardMessage(*CS.MusicListCard(play_list)))
+            await update_cardmessage(bot, message, CardMessage(*CS.MusicListCard(play_list)))
 
     elif action == 'pick':
         pick_number = int(args[0])
@@ -777,20 +788,20 @@ async def msg_btn_click(b:Bot,event:Event):
             settings.candidates_map.pop(user_id, None)
             settings.playqueue.append(selected_music)
 
-            await update_cardmessage(message, CardMessage(CS.pickCard(selected_music)))
+            await update_cardmessage(bot, message, CardMessage(CS.pickCard(selected_music)))
 
 
     elif action == 'top':
         top_number = int(args[0])
         
         if top_number > play_list_length:
-            await update_cardmessage(message, CardMessage(CS.topCard(play_list[1:])))
+            await update_cardmessage(bot, message, CardMessage(CS.topCard(play_list[1:])))
         else:
             to_top_music = play_list[top_number - 1]
             del settings.playqueue[top_number - 1]
             settings.playqueue.insert(1, to_top_music)
             new_play_list = list(settings.playqueue)
-            await update_cardmessage(message, CardMessage(CS.topCard(new_play_list[1:])))
+            await update_cardmessage(bot, message, CardMessage(CS.topCard(new_play_list[1:])))
 
     '''
     elif action == 'cut':
@@ -819,15 +830,6 @@ async def msg_btn_click(b:Bot,event:Event):
 
     # this function is WIP 
 ##################
-
-
-async def update_cardmessage(message: Message, content: CardMessage):
-    try:
-        content_str = json.dumps(content)
-        await update_message_by_bot(bot, message.id, content_str)
-    except:
-        await message.delete()
-        await message.ctx.channel.send(content)
 
 
 ###################

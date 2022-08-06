@@ -60,8 +60,7 @@ class ContainerHandler:
                 container_name = self.current_container_name
             container = await self.client.containers.get(container_name)
             await container.stop()
-            settings.lyric_msgid = ''
-            settings.playing_lyric = {}
+            
         except DockerError:
             logger.warning(f"{container_name} is not running")
     
