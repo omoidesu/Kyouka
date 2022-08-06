@@ -20,7 +20,7 @@ async def login():
             password_md5 = m.hexdigest()
             url = settings.netease_api + f'login/cellphone'
             params = {
-                'phone': settings.netease_login_phone,
+                'phone': str(settings.netease_login_phone),
                 'md5_password': password_md5
             }
         elif settings.netease_login_type == 3:
@@ -35,7 +35,7 @@ async def login():
         elif settings.netease_login_type == 2:
             async with session.get(settings.netease_api + 'captcha/sent', params={'phone': settings.netease_login_phone}) as r:
                 if r.status != 200:
-                    raise Exception('captcha send failed, settings.netease_api error')
+                    raise Exception('captcha send failed, api error')
                 r_json = await r.json()
                 if r_json['code'] == 200:
                     logger.debug('验证码发送成功，请注意查收')
@@ -44,7 +44,7 @@ async def login():
                 raise Exception('验证码不合法！')
             url = settings.netease_api + f'login/cellphone'
             params = {
-                'phone': settings.netease_login_phone,
+                'phone': str(settings.netease_login_phone),
                 'captcha': captcha
             }
     
@@ -67,6 +67,7 @@ def get_cookie(cookies: str) -> str:
     cookie_items = []
     cookie_item_list: list = []
     cookie_lease_datetime = datetime.now()
+    target_cookie = ['', '', '']
     for c in cookies_list:
         if c:
             if c[0] != ' ':
@@ -80,13 +81,23 @@ def get_cookie(cookies: str) -> str:
     for cookie_item in cookie_items:
         value = cookie_item[0]
         if 'NMTID=' in value or 'MUSIC_A=' in value or 'MUSIC_U=' in value or '__csrf=' in value:
-            ret = ret + value + '; '
-            if '__csrf=' in value:
+            # ret = ret + value + '; '
+            if 'NMTID' in value:
+                logger.debug(value)
+                target_cookie[1] = value
+            elif 'MUSIC_A' in value:
+                logger.debug(value)
+                target_cookie[0] = value
+            elif '__csrf' in value:
+                logger.debug(value)
+                target_cookie[2] = value
                 cookie_lease = cookie_item[2].split(', ')[1]
                 cookie_lease_datetime = datetime.strptime(cookie_lease, r'%d %b %Y %H:%M:%S GMT')
-            
-            if 'MUSIC_U=' in value:
-                ret = ret + '__remember_me=true; '
+            elif 'MUSIC_U' in value:
+                logger.debug(value)
+                target_cookie[0] = value
+                target_cookie.append('__remember_me=true')
 
+    ret = '; '.join(target_cookie)
 
-    return ret[:-2], cookie_lease_datetime.date()
+    return ret, cookie_lease_datetime.date()

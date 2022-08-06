@@ -582,6 +582,15 @@ async def make_music_at_top_of_play_list(msg: Message, music_number: str=""):
             await msg.channel.send(f"已将歌曲 {to_top_music.name}-{to_top_music.author} 在播放列表中置顶")
 
 
+@bot.command(name="cookie")
+@log(command="cookie")
+async def cookie(msg: Message):
+    if msg.author.id in settings.admin_users:
+        return await msg.reply(settings.netease_cookie)
+    else:
+        await msg.reply('permission denied')
+
+
 @bot.command(name="lyric")
 @log(command="lyric")
 async def lyric(msg: Message):
