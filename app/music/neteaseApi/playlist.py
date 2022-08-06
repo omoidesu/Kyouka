@@ -11,11 +11,12 @@ async def fetch_music_list_by_id(id: int, get_all: bool = False) -> list[Music]:
     params = {
         'id': id
     }
+    headers = {'cookie': settings.netease_cookie}
     if not get_all:
         params['limit'] = 20
 
     async with aiohttp.ClientSession() as session:
-        async with session.get(url, params=params) as resp:
+        async with session.get(url, params=params, headers=headers) as resp:
             resp_json = await resp.json()
             if resp.status != 200:
                 raise Exception(resp_json)
