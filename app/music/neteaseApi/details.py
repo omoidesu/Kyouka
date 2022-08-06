@@ -11,7 +11,7 @@ async def get_mp3_urls(*song_ids: int) -> dict:
         async with session.get(url, params=params, headers=headers) as resp:
             resp_json = await resp.json()
             if resp.status != 200:
-                return 'search failed, api error'
+                raise Exception(resp_json)
             
     status = resp_json.get('code', 500)
     if status == 500:

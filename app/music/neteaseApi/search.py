@@ -19,7 +19,7 @@ async def search_music_by_keyword(music_name: str, limit: int = 10) -> list[Musi
         async with session.get(url, params=params) as resp:
             resp_json = await resp.json()
             if resp.status != 200:
-                raise Exception(str(resp.status))
+                raise Exception(resp_json)
             
     status = resp_json.get('code', 500)
     if status == 500:

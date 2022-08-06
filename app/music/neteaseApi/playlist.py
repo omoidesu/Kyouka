@@ -18,7 +18,7 @@ async def fetch_music_list_by_id(id: int, get_all: bool = False) -> list[Music]:
         async with session.get(url, params=params) as resp:
             resp_json = await resp.json()
             if resp.status != 200:
-                raise Exception(str(resp.status))
+                raise Exception(resp_json)
             
     status = resp_json.get('code', 500)
     if status == 500:
