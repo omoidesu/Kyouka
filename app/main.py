@@ -42,7 +42,7 @@ else:
     from app.music.migu.search_old import msearch_music_by_keyword
 
 
-__version__ = "0.9.0-o"
+__version__ = "0.9.2-o"
 
 # logger
 if settings.file_logger:
