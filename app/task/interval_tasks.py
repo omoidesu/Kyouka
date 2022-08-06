@@ -3,12 +3,13 @@ import traceback
 import aiohttp
 
 from loguru import logger
-from khl import Bot
+from khl import Bot, Channel
 from app.config.common import settings
 from app.utils.channel_utils import update_channel_name_by_bot
 from app.utils.playing_utils import set_playing_game_status_by_bot, BUSY_STATUS_GAME_ID, FREE_STATUS_GAME_ID
 from app.voice_utils.container_async_handler import container_handler
 from app.music.bilibili.search import BPROXY_API
+from app.utils.message_utils import update_message_by_bot
 
 
 async def update_played_time_and_change_music():
@@ -33,13 +34,12 @@ async def update_played_time_and_change_music():
 
                     first_music.endtime = int(datetime.datetime.now().timestamp() * 1000) + first_music.duration
 
-                    settings.played += 5000
                     settings.lock = False
                     return None
                 else:
                     duration = first_music.duration
-                    if settings.played + 5000 < duration or (settings.played + 5000 > duration and settings.played < duration):
-                        settings.played += 5000
+                    if settings.played + 1000 < duration or (settings.played + 1000 > duration and settings.played < duration):
+                        settings.played += 1000
                         settings.lock = False
                         return None
                     else:
@@ -55,7 +55,6 @@ async def update_played_time_and_change_music():
 
                             next_music.endtime = int(datetime.datetime.now().timestamp() * 1000) + next_music.duration
 
-                            settings.played = 5000
                             settings.lock = False
                             return None
         except Exception as e:
@@ -160,3 +159,22 @@ async def refresh_netease_api_cookies():
                 break
 
         settings.netease_cookie_lease = cookie_lease_datetime
+
+async def send_lyric(bot):
+    playtime = settings.played
+
+    if settings.playing_lyric:
+        channel: Channel = settings.playing_lyric.get('channel', None)
+        lyrics = settings.playing_lyric.get('lyric', '')
+        if not channel or not lyrics:
+            raise Exception('歌词错误')
+        
+        lyric = lyrics.get(playtime + 1, '')
+        if not lyric:
+            return None
+
+        if not settings.lyric_msgid:
+            message = await channel.send(lyric)
+            settings.lyric_msgid = message['msg_id']
+        else:
+            await update_message_by_bot(bot, settings.lyric_msgid, lyric)

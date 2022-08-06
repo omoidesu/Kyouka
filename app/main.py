@@ -10,16 +10,13 @@ from app.config.common import settings
 from app.music.bilibili.search import bvid_to_music_by_bproxy
 from app.music.osu.search import osearch_music_by_keyword
 from app.music.qqmusic.search import qsearch_music_by_keyword
-from app.music.migu.search import msearch_music_by_keyword
-from app.music.migu.album import m_fetch_album_by_id
-from app.music.migu.playlist import m_fetch_music_list_by_id
 from app.voice_utils.container_async_handler import container_handler
 from app.utils.channel_utils import get_joined_voice_channel_id
 from app.utils.log_utils import loguru_decorator_factory as log
 from app.utils.permission_utils import warn_decorator as warn
 from app.utils.permission_utils import ban_decorator as ban
 from app.utils.message_utils import update_message_by_bot
-from app.task.interval_tasks import update_played_time_and_change_music, clear_expired_candidates_cache, keep_bproxy_alive, update_kanban_info, update_playing_game_status, keep_bot_market_heart_beat, refresh_netease_api_cookies
+from app.task.interval_tasks import update_played_time_and_change_music, clear_expired_candidates_cache, keep_bproxy_alive, update_kanban_info, update_playing_game_status, keep_bot_market_heart_beat, refresh_netease_api_cookies, send_lyric
 
 import app.CardStorage as CS
 
@@ -29,14 +26,23 @@ if settings.enable_netease_api:
     from app.music.neteaseApi.album import fetch_album_by_id
     from app.music.neteaseApi.radio import fetch_radio_by_id
     from app.music.neteaseApi.login import login
+    from app.music.neteaseApi.lyric import get_lyric as n_get_lyric
 else:
     from app.music.netease.album import fetch_album_by_id
     from app.music.netease.search import search_music_by_keyword
     from app.music.netease.playlist import fetch_music_list_by_id
     from app.music.netease.radio import fetch_radio_by_id
 
+if settings.enable_migu_api:
+    from app.music.migu.search import msearch_music_by_keyword
+    from app.music.migu.album import m_fetch_album_by_id
+    from app.music.migu.playlist import m_fetch_music_list_by_id
+    from app.music.migu.lyric import get_lyric as m_get_lyric
+else:
+    from app.music.migu.search_old import msearch_music_by_keyword
 
-__version__ = "0.8.2-o"
+
+__version__ = "0.9.0-o"
 
 # logger
 if settings.file_logger:
@@ -142,7 +148,10 @@ async def import_music_by_playlist(msg: Message, playlist_url : str="", *args):
             raise Exception("输入格式有误。\n正确格式为: /playlist {playlist_url} 或 /歌单 {playlist_url}")
         msg_id = (await msg.channel.send("正在逐条导入歌单音乐，请稍候"))['msg_id']
         if 'migu' in playlist_url:
-            result = await m_fetch_music_list_by_id(bot, playlist_id, msg_id, get_all=get_all)
+            if settings.enable_migu_api:
+                result = await m_fetch_music_list_by_id(bot, playlist_id, msg_id, get_all=get_all)
+            else:
+                return await msg.reply('未启用该功能')
         else:
             result = await fetch_music_list_by_id(playlist_id, get_all=get_all)
         if not result:
@@ -171,7 +180,10 @@ async def import_music_by_album(msg: Message, album_url: str=''):
             raise Exception('输入格式有误。\n正确格式为: /album {album_url} 或 /电台 {album_url}')
         await msg.channel.send("正在逐条导入专辑音乐，请稍候")
         if 'migu' in album_url:
-            result = await m_fetch_album_by_id(album_id)
+            if settings.enable_migu_api:
+                result = await m_fetch_album_by_id(album_id)
+            else:
+                return await msg.reply('未启用该功能')
         else:
             result = await fetch_album_by_id(album_id)
         if not result:
@@ -482,6 +494,8 @@ async def cut_music(msg: Message):
             await msg.channel.send("正在切歌，请稍候")
             settings.playqueue.popleft()
             await container_handler.stop_container()
+            settings.lyric_msgid = ''
+            settings.playing_lyric = {}
             await msg.channel.send("后面没歌了哦")
             settings.played = 0
         else:
@@ -490,9 +504,9 @@ async def cut_music(msg: Message):
             next_music = settings.playqueue[0]
             next_music.endtime = int(datetime.datetime.now().timestamp() * 1000) + next_music.duration
             await msg.channel.send(f"正在为您播放 {next_music.name} - {next_music.author}")
+            settings.lyric_msgid = ''
+            settings.playing_lyric = {}
             await container_handler.create_container(next_music.source)
-
-            settings.played = 5000
 
 
 @bot.command(name="remove", aliases=["rm", "删除", "删"])
@@ -565,6 +579,23 @@ async def make_music_at_top_of_play_list(msg: Message, music_number: str=""):
             del settings.playqueue[music_number - 1]
             settings.playqueue.insert(1, to_top_music)
             await msg.channel.send(f"已将歌曲 {to_top_music.name}-{to_top_music.author} 在播放列表中置顶")
+
+
+@bot.command(name="lyric")
+@log(command="lyric")
+async def lyric(msg: Message):
+    playing = settings.playqueue[0]
+    if playing.website == 'migu':
+        lyrics = await m_get_lyric(playing.music_id)
+    elif playing.website == 'netease':
+        if settings.enable_netease_api:
+            lyrics = await n_get_lyric(playing.music_id)
+        else:
+            await msg.reply('未启用该功能')
+    else:
+        await msg.reply('未启用该功能')
+
+    settings.playing_lyric = {'channel': msg.ctx.channel, 'lyric': lyrics}
 
 
 @bot.command(name="pause", aliases=["暂停"])
@@ -659,9 +690,10 @@ async def startup_tasks():
 
 
 # repeated tasks
-@bot.task.add_interval(seconds=5)
+@bot.task.add_interval(seconds=1)
 async def five_seconds_interval_tasks():
     await update_played_time_and_change_music()
+    await send_lyric(bot)
 
 
 @bot.task.add_interval(seconds=10)

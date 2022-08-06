@@ -48,6 +48,7 @@ class ContainerHandler:
             "Env": env_list,
         }
         logger.debug(f"{config}")
+        settings.played = -1001
         await self.client.containers.run(config=config, name=self.current_container_name)
         await self.stop_container(container_name=self.previous_container_name)
     

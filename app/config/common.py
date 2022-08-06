@@ -36,6 +36,8 @@ class CommonSettings(BaseSettings):
     played: int = 0   # ms
     playqueue: collections.deque[Music] = collections.deque()
     lock: bool = False
+    playing_lyric: dict = {}
+    lyric_msgid: str = ''
 
     candidates_map: dict = {}
     candidates_lock: bool = False
