@@ -12,56 +12,53 @@ from app.music.bilibili.search import BPROXY_API
 from app.utils.message_utils import update_message_by_bot
 
 
-async def update_played_time_and_change_music():
-    logger.debug(f"PLAYED: {settings.played}")
-    # logger.debug(f"Q: {[str(music) for music in settings.playqueue]}")
-    # logger.debug(f"LOCK: {settings.lock}")
+async def change_music():
+    # logger.debug(f"PLAYED: {settings.played}")
+    logger.debug(f"Q: {[str(music) for music in settings.playqueue]}")
+    logger.debug(f"LOCK: {settings.lock}")
 
-    if settings.lock:
-        return None
-    else:
-        settings.lock = True
+    settings.lock = True
 
-        try:
-            if len(settings.playqueue) == 0:
-                settings.played = 0
-                settings.lock = False
+    try:
+        if len(settings.playqueue) == 0:
+            settings.played = 0
+            settings.lock = False
+            return None
+        else:
+            first_music = settings.playqueue[0]
+            if settings.played == 0:
+                await container_handler.create_container(first_music.source)
+
+                first_music.endtime = int(datetime.datetime.now().timestamp() * 1000) + first_music.duration
+
                 return None
             else:
-                first_music = settings.playqueue[0]
-                if settings.played == 0:
-                    await container_handler.create_container(first_music.source)
-
-                    first_music.endtime = int(datetime.datetime.now().timestamp() * 1000) + first_music.duration
-
-                    settings.lock = False
+                duration = first_music.duration
+                if settings.played + 1000 < duration or (settings.played + 1000 > duration and settings.played < duration):
                     return None
                 else:
-                    duration = first_music.duration
-                    if settings.played + 1000 < duration or (settings.played + 1000 > duration and settings.played < duration):
-                        settings.played += 1000
+                    settings.playqueue.popleft()
+                    settings.played = -1001
+                    if len(settings.playqueue) == 0:
+                        await container_handler.stop_container()
+                        settings.played = 0
                         settings.lock = False
                         return None
                     else:
-                        settings.playqueue.popleft()
-                        if len(settings.playqueue) == 0:
-                            await container_handler.stop_container()
-                            settings.played = 0
-                            settings.lock = False
-                            return None
-                        else:
-                            next_music = settings.playqueue[0]
-                            await container_handler.create_container(next_music.source)
+                        next_music = settings.playqueue[0]
+                        await container_handler.create_container(next_music.source)
 
-                            settings.played = 8999
+                        next_music.endtime = int(datetime.datetime.now().timestamp() * 1000) + next_music.duration
 
-                            next_music.endtime = int(datetime.datetime.now().timestamp() * 1000) + next_music.duration
+                        return None
+    except Exception as e:
+        settings.lock = False
+        logger.error(f"error occurred in automatically changing music, error msg: {e}, traceback: {traceback.format_exc()}")
 
-                            settings.lock = False
-                            return None
-        except Exception as e:
-            settings.lock = False
-            logger.error(f"error occurred in automatically changing music, error msg: {e}, traceback: {traceback.format_exc()}")
+async def update_played_time():
+    logger.debug(f"PLAYED: {settings.played}")
+    if settings.lock:
+        settings.played += 1000
 
 async def clear_expired_candidates_cache():
     if settings.candidates_lock:

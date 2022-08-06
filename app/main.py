@@ -16,7 +16,7 @@ from app.utils.log_utils import loguru_decorator_factory as log
 from app.utils.permission_utils import warn_decorator as warn
 from app.utils.permission_utils import ban_decorator as ban
 from app.utils.message_utils import update_message_by_bot
-from app.task.interval_tasks import update_played_time_and_change_music, clear_expired_candidates_cache, keep_bproxy_alive, update_kanban_info, update_playing_game_status, keep_bot_market_heart_beat, refresh_netease_api_cookies, send_lyric
+from app.task.interval_tasks import change_music, clear_expired_candidates_cache, keep_bproxy_alive, update_kanban_info, update_playing_game_status, keep_bot_market_heart_beat, refresh_netease_api_cookies, send_lyric, update_played_time
 
 import app.CardStorage as CS
 
@@ -687,9 +687,14 @@ async def startup_tasks():
 
 # repeated tasks
 @bot.task.add_interval(seconds=1)
-async def five_seconds_interval_tasks():
-    await update_played_time_and_change_music()
+async def one_second_interval_tasks():
+    await update_played_time()
     await send_lyric(bot)
+
+
+@bot.task.add_interval(seconds=5)
+async def five_seconds_interval_tasks():
+    await change_music()
 
 
 @bot.task.add_interval(seconds=10)
