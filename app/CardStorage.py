@@ -319,7 +319,7 @@ def topCard(music_list: list[Music]) -> Card:
 
 def lyricCard(music: Music, lyric) -> Card:
     card = Card(
-        Module.Header(':notes: ' + music.name),
+        Module.Header(':microphone: ' + music.name),
         Module.Divider(),
         Module.Section(Element.Text(lyric)),
         Module.Divider(),
