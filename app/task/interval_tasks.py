@@ -16,7 +16,7 @@ from app.utils.message_utils import update_cardmessage
 
 async def change_music():
     # logger.debug(f"PLAYED: {settings.played}")
-    logger.debug(f"Q: {[str(music) for music in settings.playqueue]}")
+    # logger.debug(f"Q: {[str(music) for music in settings.playqueue]}")
     logger.debug(f"LOCK: {settings.lock}")
 
     settings.lock = True
@@ -60,7 +60,8 @@ async def change_music():
         logger.error(f"error occurred in automatically changing music, error msg: {e}, traceback: {traceback.format_exc()}")
 
 async def update_played_time():
-    logger.debug(f"PLAYED: {settings.played}")
+    if settings.playqueue:
+        logger.debug(f"PLAYED: {settings.played}, music: {settings.playqueue[0]}")
     if settings.lock:
         settings.played += 1000
 
