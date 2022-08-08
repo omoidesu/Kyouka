@@ -591,7 +591,7 @@ async def cookie(msg: Message):
         await msg.reply('permission denied')
 
 
-@bot.command(name="lyric")
+@bot.command(name="lyric", aliases=['lrc', 'geci', '歌词', 'kashi'])
 @log(command="lyric")
 async def lyric(msg: Message):
     playing = settings.playqueue[0]
