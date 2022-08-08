@@ -28,7 +28,7 @@ async def fetch_music_list_by_id(id: int, get_all: bool = False) -> list[Music]:
         songs = [NeteaseMusic(**song) for song in resp_json.get('songs', [])]
         mp3_list = await get_mp3_urls(*[song.music_id for song in songs])
         for song in songs:
-            song.source = mp3_list.get(song.music_id, None)
+            song.source = f'https://music.163.com/song/media/outer/url?id={song.music_id}.mp3' if mp3_list.get(song.music_id, None) else None
             song.website = 'netease'
 
         for i in range(len(songs) -1, -1, -1):
