@@ -229,7 +229,6 @@ def HelpCard() -> Card:
 def searchCard(music_dict: dict) -> Card:
     return_card = []
     music_list: list[Music] = []
-    end_time = str(datetime.datetime.now() + datetime.timedelta(minutes=1)).replace(':', '-')
 
     for value in music_dict.values():
         music_list += value
@@ -242,7 +241,7 @@ def searchCard(music_dict: dict) -> Card:
                 card.append(
                     Module.Section(
                         Element.Text(f'** ({music_list.index(music) + 1}) {music.name} - {music.author}**', type=Types.Text.KMD),
-                        Element.Button('点歌', f'pick:{str(music_list.index(music))}:{end_time}', theme=Types.Theme.SUCCESS)
+                        Element.Button('点歌', f'pick:{str(music_list.index(music))}:-1', theme=Types.Theme.SUCCESS)
                         )
                     )
                 card.append(Module.Context(
