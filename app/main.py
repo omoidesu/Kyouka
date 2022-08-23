@@ -698,7 +698,6 @@ async def logout(msg: Message):
 
 # startup events
 @bot.task.add_date()
-@log(command="startup")
 async def startup_tasks():
     await container_handler.clear_leaked_containers()
     if settings.enable_netease_api:
