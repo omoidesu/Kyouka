@@ -23,7 +23,7 @@ async def get_lyric(music: Music) -> dict:
         if not data:
             raise Exception('没有找到歌词')
         
-        lyric = data.split('\r\n')
+        lyric = data.split('\n')
         for lyric_item in lyric:
             matchObj = time_pattern.search(lyric_item)
             if matchObj:

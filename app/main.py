@@ -42,7 +42,7 @@ else:
     from app.music.migu.search_old import msearch_music_by_keyword
 
 
-__version__ = "0.9.2-o"
+__version__ = "0.9.3-o"
 
 # logger
 if settings.file_logger:
@@ -698,6 +698,7 @@ async def logout(msg: Message):
 
 # startup events
 @bot.task.add_date()
+@log(command="startup")
 async def startup_tasks():
     await container_handler.clear_leaked_containers()
     if settings.enable_netease_api:
